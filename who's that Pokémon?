@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who's That Pokémon?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a2e;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(12px, 3vw, 20px);
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #e63946;
+    margin-bottom: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  #score-bar {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #aaa;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  #score-bar span { color: #FFD700; }
+
+  #game-box {
+    background: #16213e;
+    border: 3px solid #FFD700;
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(255,215,0,0.15);
+  }
+
+  #silhouette-wrap {
+    background: #0f3460;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #poke-img {
+    width: 150px;
+    height: 150px;
+    image-rendering: pixelated;
+    transition: filter 0.6s ease;
+    filter: brightness(0) invert(0);
+  }
+
+  #poke-img.revealed { filter: none; }
+
+  #question-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #ccc;
+    margin-bottom: 16px;
+    line-height: 1.7;
+  }
+
+  #options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .opt-btn {
+    background: #0f3460;
+    border: 2px solid #536dfe;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 12px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    line-height: 1.6;
+  }
+  .opt-btn:hover:not(:disabled) { background: #536dfe; transform: scale(1.03); }
+  .opt-btn:disabled { cursor: default; opacity: 0.75; }
+  .opt-btn.correct { background: #2ecc71; border-color: #27ae60; }
+  .opt-btn.wrong   { background: #e74c3c; border-color: #c0392b; }
+
+  #feedback {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    min-height: 22px;
+    margin-bottom: 14px;
+    color: #FFD700;
+  }
+
+  #next-btn {
+    background: #FFD700;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 12px 28px;
+    cursor: pointer;
+    display: none;
+    transition: transform 0.1s, background 0.15s;
+  }
+  #next-btn:hover { background: #ffe066; transform: scale(1.04); }
+
+  #end-screen {
+    display: none;
+    text-align: center;
+  }
+  #end-screen h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #FFD700;
+    margin-bottom: 14px;
+  }
+  #end-screen p {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #ccc;
+    margin-bottom: 20px;
+    line-height: 2;
+  }
+  #restart-btn {
+    background: #e63946;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 12px 24px;
+    cursor: pointer;
+  }
+  #restart-btn:hover { background: #ff6b6b; }
+
+  .stars { font-size: 22px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>WHO'S THAT POKÉMON?</h1>
+<div id="score-bar">Score: <span id="score">0</span> &nbsp;|&nbsp; Round: <span id="round">1</span>/10</div>
+
+<div id="game-box">
+  <div id="game-area">
+    <div id="silhouette-wrap">
+      <img id="poke-img" src="" alt="Pokémon silhouette" />
+    </div>
+    <div id="question-label">WHO'S THAT POKÉMON?</div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button id="next-btn" onclick="nextRound()">NEXT →</button>
+  </div>
+
+  <div id="end-screen">
+    <div class="stars" id="stars"></div>
+    <h2>GAME OVER!</h2>
+    <p>You got <span id="final-score"></span> / 10 correct!<br><span id="rank-msg"></span></p>
+    <button id="restart-btn" onclick="startGame()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+  // 40 classic Pokémon (Gen 1 & 2)
+  const POOL = [
+    1,4,7,25,39,52,54,63,66,74,79,81,92,94,102,
+    113,122,125,126,129,131,133,137,143,147,
+    152,155,158,175,179,183,196,197,
+    200,202,204,207,210,213,226
+  ];
+
+  const NAME = {
+    1:'Bulbasaur',4:'Charmander',7:'Squirtle',25:'Pikachu',39:'Jigglypuff',
+    52:'Meowth',54:'Psyduck',63:'Abra',66:'Machop',74:'Geodude',
+    79:'Slowpoke',81:'Magnemite',92:'Gastly',94:'Gengar',102:'Exeggcute',
+    113:'Chansey',122:'Mr. Mime',125:'Electabuzz',126:'Magmar',129:'Magikarp',
+    131:'Lapras',133:'Eevee',137:'Porygon',143:'Snorlax',147:'Dratini',
+    152:'Chikorita',155:'Cyndaquil',158:'Totodile',175:'Togepi',179:'Mareep',
+    183:'Marill',196:'Espeon',197:'Umbreon',200:'Misdreavus',202:'Wobbuffet',
+    204:'Pineco',207:'Gligar',210:'Granbull',213:'Shuckle',226:'Mantine'
+  };
+
+  let queue, round, score;
+
+  function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+  function startGame() {
+    queue = shuffle(POOL).slice(0, 10);
+    round = 0; score = 0;
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-area').style.display = 'block';
+    updateBar();
+    loadRound();
+  }
+
+  function updateBar() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('round').textContent = round + 1;
+  }
+
+  function loadRound() {
+    const id = queue[round];
+    const img = document.getElementById('poke-img');
+    img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+    img.className = '';
+
+    // Build 4 options: 1 correct + 3 random wrong
+    const others = shuffle(Object.keys(NAME).filter(k => +k !== id)).slice(0, 3).map(k => NAME[k]);
+    const opts = shuffle([NAME[id], ...others]);
+
+    const container = document.getElementById('options');
+    container.innerHTML = '';
+    opts.forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = name.toUpperCase();
+      btn.onclick = () => pick(btn, name, NAME[id]);
+      container.appendChild(btn);
+    });
+
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('question-label').textContent = "WHO'S THAT POKÉMON?";
+  }
+
+  function pick(btn, chosen, correct) {
+    document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+    document.getElementById('poke-img').classList.add('revealed');
+
+    if (chosen === correct) {
+      btn.classList.add('correct');
+      document.getElementById('feedback').textContent = '✓ CORRECT!';
+      score++;
+    } else {
+      btn.classList.add('wrong');
+      document.getElementById('feedback').textContent = `✗ It's ${correct.toUpperCase()}!`;
+      document.querySelectorAll('.opt-btn').forEach(b => {
+        if (b.textContent === correct.toUpperCase()) b.classList.add('correct');
+      });
+    }
+
+    updateBar();
+    document.getElementById('next-btn').style.display = round < 9 ? 'inline-block' : 'none';
+    if (round === 9) setTimeout(endGame, 1200);
+  }
+
+  function nextRound() {
+    round++;
+    updateBar();
+    loadRound();
+  }
+
+  function endGame() {
+    document.getElementById('game-area').style.display = 'none';
+    const end = document.getElementById('end-screen');
+    end.style.display = 'block';
+    document.getElementById('final-score').textContent = score;
+    const ranks = ['Keep training, trainer!','Not bad! Keep it up!','Solid effort!','Great job!','You\'re a Pokémon Master!'];
+    document.getElementById('rank-msg').textContent = ranks[Math.floor(score / 2)];
+    document.getElementById('stars').textContent = '⭐'.repeat(Math.ceil(score / 2));
+  }
+
+  startGame();
+</script>
+</body>
+</html>
